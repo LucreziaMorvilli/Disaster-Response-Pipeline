@@ -10,7 +10,14 @@ I used a data set containing real messages that were sent during disaster events
 The project includes a web app where an emergency worker can input a new message and get classification results in several categories. The web app will also display visualizations of the data:
 
 ![Sample Input](screenshots/one.png)
+
+#### Example:
 ![Sample Output](screenshots/five.png)
+
+#### Visualizations of the data:
+![two](screenshots/two.png)
+![three](screenshots/three.png)
+![four](screenshots/four.png)
 
 ### Instructions:
 1. Run the following commands in the project's root directory to set up your database and model.
