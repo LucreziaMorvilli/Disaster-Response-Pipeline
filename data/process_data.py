@@ -4,6 +4,16 @@ import pandas as pd
 from sqlalchemy import create_engine
 
 def load_data(messages_filepath, categories_filepath):
+    '''
+    Load data on messages and categories and returns a merged dataframe
+
+    Input: 
+    - messages_filepath
+    - categories_filepath
+
+    Output:
+    - df: dataframe with merged data from messages and categories
+    '''
     messages = pd.read_csv(messages_filepath)
     categories = pd.read_csv(categories_filepath)
     
@@ -14,6 +24,16 @@ def load_data(messages_filepath, categories_filepath):
     return df
 
 def clean_data(df):
+    '''
+    Clean dataframe by splitting the categories column in multiple 
+    columns filled with 0s and 1s
+
+    Input: 
+    - df: contains data on messages and categories
+
+    Output:
+    - df: cleaned dataframe
+    '''
     categories = df['categories'].str.split(';', expand=True)
     
     #column names
@@ -43,6 +63,15 @@ def clean_data(df):
     return df
 
 def save_data(df, database_filename):
+    '''
+    Save the cleaned data on messages and categories in a database
+
+    Input: 
+    - df: the dataframe you want to save
+    - database_filename: destination where to save it 
+
+    No Output
+    '''
     engine = create_engine('sqlite:///{}'.format(database_filename))
     df.to_sql(database_filename, engine, index=False, if_exists='replace')
 
