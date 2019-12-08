@@ -24,6 +24,18 @@ from sklearn.base import BaseEstimator, TransformerMixin
 url_regex = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
 
 def load_data(database_filepath):
+    '''
+    Load data on messages and categories from database and return the data in 
+    array format for ML model
+
+    Input:
+    - database_filepath: where database is stored
+    Output:
+    - X: array of messages
+    - Y: array of categories (labels)
+    - target_names: names of categories
+    '''
+
     engine = create_engine('sqlite:///'+database_filepath)
     df = pd.read_sql_table(database_filepath, engine)
     X = df.message.values
@@ -34,6 +46,15 @@ def load_data(database_filepath):
 
 
 def tokenize(text):
+    '''
+    Tokenize a string by removing stop words, urls, punctuation, upper case and blank spaces 
+    and deriving the root of the words by using lemmatizer
+
+    Input:
+    - text: string
+    Output:
+    - clean_tokens: list of strings
+    '''
     # get list of all urls using regex
     detected_urls = re.findall(url_regex, text)
     
@@ -65,20 +86,60 @@ def tokenize(text):
 
 
 def build_model():
+    '''
+    Build a machine learning pipeline with a CountVectorizer, TfidfTransformer 
+    and AdaBoostClassifier returning multiple labels. Run GridSearchCV to tune 
+    the hyperparameters of the model
+
+    No Input
+    Output:
+    - pipeline: ML pipeline that can be used to train a model
+    '''
     pipeline = Pipeline([
-        ('vect', CountVectorizer(tokenizer=tokenize, max_features=10000)),
+        ('vect', CountVectorizer(tokenizer=tokenize)),
         ('tfidf', TfidfTransformer()),
         ('clf', MultiOutputClassifier(AdaBoostClassifier(),n_jobs=-1))
     ])
-    return pipeline
+
+    parameters = {
+        #'vect__ngram_range': ((1, 1), (1, 2)), tested already and default are the best
+        #'vect__max_df': (0.5, 0.75, 1.0), tested already and default are the best
+        'vect__max_features': (None, 5000, 10000),
+        #'tfidf__use_idf': (True, False),
+        'clf__estimator__n_estimators': [50,100,200]
+    }
+
+    cv = GridSearchCV(pipeline, param_grid=parameters,verbose = 5, n_jobs=1, 
+        scoring='f1_samples')
+
+    return cv
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
+    '''
+    Evaluate the model by predicting labels for X_test and returning precision, 
+    recall and F-score per category and overall
+
+    Input:
+    - model: model to use for predicting labels
+    - X_test: messages for which we want to predict categories 
+    - Y_test: the true labels for those messages (X_test)
+    - category_names: list of the names of all the categories
+    Output: print statement
+    '''
     y_pred = model.predict(X_test)
     print(classification_report(Y_test, y_pred, target_names=category_names))
 
 
 def save_model(model, model_filepath):
+    '''
+    Save the model using pickle
+
+    Input:
+    - model: model you want to save
+    - model_filepath: where you want to save the model
+    No Output
+    '''
     pkl_filename = model_filepath
     with open(pkl_filename, 'wb') as file:
         pickle.dump(model, file)
