@@ -20,6 +20,15 @@ from sqlalchemy import create_engine
 app = Flask(__name__)
 
 def tokenize(text):
+    '''
+    Tokenize a string by removing stop words, upper case and blank spaces 
+    and deriving the root of the words by using lemmatizer
+
+    Input:
+    - text: string
+    Output:
+    - clean_tokens: list of strings
+    '''
     tokens = word_tokenize(text)
     tokens = [w for w in tokens if w not in stopwords.words("english")]
     lemmatizer = WordNetLemmatizer()
